@@ -59,15 +59,6 @@ def shock(f):
     return f.has_face and f.blend("jawOpen") > 0.45
 
 
-@gesture("hands_up", priority=40)
-def hands_up(f):
-    """Both hands raised above the nose."""
-    if f.num_hands < 2 or not f.has_face:
-        return False
-    nose_y = f.face_point(1)[1]
-    return all(h.point(h.WRIST)[1] < nose_y for h in f.hands)
-
-
 @gesture("shush", priority=35)
 def shush(f):
     """One index fingertip pressed to the middle of the lips."""
@@ -100,6 +91,59 @@ def wink(f):
     left = f.blend("eyeBlinkLeft")
     right = f.blend("eyeBlinkRight")
     return (left > 0.5 and right < 0.3) or (right > 0.5 and left < 0.3)
+
+
+@gesture("deves", priority=45)
+def deves(f):
+    """Screaming grin with a hand up (recorded)."""
+    return (
+        f.has_face
+        and f.blend("mouthSmileRight") > 0.45
+        and f.blend("mouthSmileLeft") > 0.35
+        and f.blend("mouthLowerDownRight") > 0.32
+        and f.num_hands >= 1
+    )
+
+
+@gesture("sus", priority=25)
+def sus(f):
+    """Side-eye — both eyes cut to the same side (The Rock 'sus' look)."""
+    return (
+        f.has_face
+        and f.blend("eyeLookInLeft") > 0.38
+        and f.blend("eyeLookOutRight") > 0.36
+    )
+
+
+@gesture("fire", priority=40)
+def fire(f):
+    """Both hands raised high (above the nose) — arms-up 'fire' pose."""
+    if f.num_hands < 2 or not f.has_face:
+        return False
+    nose_y = f.face_point(1)[1]
+    return all(h.point(h.WRIST)[1] < nose_y for h in f.hands)
+
+
+@gesture("sad", priority=22)
+def sad(f):
+    """Squinting, hand near face (recorded)."""
+    return (
+        f.has_face
+        and f.blend("eyeSquintRight") > 0.27
+        and f.blend("eyeSquintLeft") > 0.33
+        and f.num_hands >= 1
+    )
+
+
+@gesture("umm", priority=15)
+def umm(f):
+    """Skeptical 'umm' face — lips pressed together, lower lip rolled in."""
+    return (
+        f.has_face
+        and f.blend("mouthPressLeft") > 0.28
+        and f.blend("mouthRollLower") > 0.22
+        and f.blend("mouthPressRight") > 0.21
+    )
 
 
 @gesture("smile", priority=10)
