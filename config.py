@@ -17,9 +17,6 @@ ROOT = Path(__file__).parent
 MEMES_DIR = ROOT / "memes"
 MODELS_DIR = ROOT / "models"
 
-# Recorded gestures (created by recorder.py). See README "Record your own".
-CUSTOM_GESTURES_FILE = ROOT / "custom_gestures.json"
-
 # --- Camera / window -----------------------------------------------------
 CAMERA_INDEX = 0          # change if you have multiple webcams
 FRAME_WIDTH = 640         # per-pane width; window is 2x this wide
@@ -39,7 +36,11 @@ GESTURE_MEMES = {
     "wink":      "wink.jpg",
     "thinking":  "thinking.jpg",
     "shush":     "shush.jpg",
-    "hands_up":  "hands_up.gif",
+    "umm":       "umm.jpeg",
+    "sus":       "sus.jpeg",
+    "sad":       "sad.jpeg",
+    "fire":      "fire.jpeg",
+    "deves":     "deves.jpeg",
 }
 
 # When no gesture is active, show this (or None for a blank pane).

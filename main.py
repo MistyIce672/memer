@@ -1,8 +1,9 @@
 """
 Webcam gesture -> meme, split-screen.
 
-    python main.py            # run it
-    python main.py --debug    # overlay live blendshape/hand values for tuning
+    python main.py                    # run it
+    python main.py --debug            # overlay live blendshape/hand values
+    python main.py --record wink      # record a new custom gesture
 
 Press  q  or  Esc  to quit.
 
@@ -24,6 +25,7 @@ import config
 from features import build_features
 from gestures import active_gesture
 from meme_player import MemePlayer
+from recorder import GestureRecorder
 
 MODELS = {
     "face_landmarker.task":
@@ -83,10 +85,62 @@ def draw_debug(img, f):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 220, 255), 1, cv2.LINE_AA)
 
 
+def draw_lines(img, lines, y0=25):
+    """Draw a stack of small text lines at the top-left."""
+    y = y0
+    for text in lines:
+        cv2.putText(img, text, (15, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6, (0, 255, 0), 2, cv2.LINE_AA)
+        y += 26
+
+
+def run_record(name, face_det, hand_det, cap):
+    """Record a custom gesture and write recordings/NAME.py."""
+    rec = GestureRecorder(name)
+    print(f"Recording gesture '{name}'. Strike the pose, tap SPACE a few "
+          f"times, tap B a few times relaxed, then S to save.")
+
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if config.MIRROR:
+            frame = cv2.flip(frame, 1)
+        frame = cv2.resize(frame, (config.FRAME_WIDTH, config.FRAME_HEIGHT))
+
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        f = build_features(face_det.detect(mp_image), hand_det.detect(mp_image))
+
+        draw_lines(frame, rec.overlay_lines())
+        cv2.imshow("emote-meme  (recording)", frame)
+
+        key = cv2.waitKey(1) & 0xFF
+        if key in (ord("q"), 27):
+            break
+        elif key == ord(" "):
+            rec.capture(f)
+        elif key in (ord("b"), ord("B")):
+            rec.capture(f, baseline=True)
+        elif key in (ord("c"), ord("C")):
+            rec.clear()
+        elif key in (ord("s"), ord("S")):
+            path, code, notes = rec.save()
+            print("\n" + "=" * 60)
+            print(f"Saved suggestion to {path}\n")
+            print(code)
+            for n in notes:
+                print(f"note: {n}")
+            print("=" * 60 + "\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--debug", action="store_true",
                     help="overlay live blendshape/hand values for tuning")
+    ap.add_argument("--record", metavar="NAME",
+                    help="record a new custom gesture and save a suggested "
+                         "detector to recordings/NAME.py")
     ap.add_argument("--camera", type=int, default=config.CAMERA_INDEX)
     args = ap.parse_args()
 
@@ -99,6 +153,12 @@ def main():
     if not cap.isOpened():
         sys.exit(f"Could not open camera {args.camera}. "
                  f"Try --camera 1, or check permissions.")
+
+    if args.record:
+        run_record(args.record, face_det, hand_det, cap)
+        cap.release()
+        cv2.destroyAllWindows()
+        return
 
     player = MemePlayer(config.FRAME_WIDTH, config.FRAME_HEIGHT)
     shown_gesture = None

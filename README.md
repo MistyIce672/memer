@@ -54,6 +54,32 @@ Press `q` or `Esc` to quit.
 
 That's it — restart the app.
 
+## Record a custom gesture (no eyeballing)
+
+Don't want to guess thresholds? Let the app watch you and write the detector:
+
+```bash
+python main.py --record tongue_out
+```
+
+Then, in the window:
+
+- **SPACE** — capture a sample while striking the pose (tap a few times).
+- **B** — capture a *neutral/relaxed* baseline frame (tap a few times). Optional
+  but recommended: it lets the recorder tell what actually changed vs. resting.
+- **C** — clear and start over.
+- **S** — analyze and save a ready-to-paste detector to `recordings/tongue_out.py`
+  (also printed to the terminal), with thresholds picked from your samples.
+- **Q/Esc** — quit.
+
+Open `recordings/tongue_out.py`, paste the function into `gestures.py`, add the
+mapping line it prints to `config.py`, drop your art in `memes/`, and restart.
+
+It records every blendshape plus hand count, so face gestures and "N hands up"
+work automatically. Gestures that depend on *where* a hand is (fingertip near
+chin, etc.) still need a hand-written distance check — the saved file tells you
+when that applies.
+
 ## Tuning thresholds to your face/camera
 
 ```bash
@@ -109,15 +135,19 @@ shush, hands_up). Uploaded files land in `web/storage/` (gitignored).
 
 ### How the pieces map to the desktop app
 
-| Desktop (Python)                    | Website (browser JS)                    |
-| ----------------------------------- | --------------------------------------- |
-| `detectors.py` MediaPipe setup      | `web/static/js/mediapipe.js`            |
-| `features.py`                       | `web/static/js/features.js`             |
-| `gestures.py` built-ins             | built-in predicates in `gestures.js`    |
-| `custom_gestures.py` template match | template matching in `gestures.js`      |
-| the (missing) `recorder.py`         | `web/static/js/record.js` (in-browser)  |
-| `main.py` loop + `meme_player.py`   | `web/static/js/play.js` + `play.html`   |
-| `config.GESTURE_MEMES` mapping      | per-meme pairing stored in MongoDB      |
+| Desktop (Python)                       | Website (browser JS)                      |
+| -------------------------------------- | ----------------------------------------- |
+| `main.py` `make_detectors()` MediaPipe | `web/static/js/mediapipe.js`              |
+| `features.py`                          | `web/static/js/features.js`               |
+| `gestures.py` built-in detectors       | built-in predicates in `gestures.js`      |
+| `recorder.py` → `recordings/*.py`      | `record.js` (in-browser) + `gestures.js`  |
+| `main.py` loop + `meme_player.py`      | `web/static/js/play.js` + `play.html`     |
+| `config.GESTURE_MEMES` mapping         | per-meme pairing stored in MongoDB        |
+
+The desktop recorder writes a Python detector to `recordings/`; the web recorder
+captures a numeric template and stores it in MongoDB — same idea, different
+persistence. The browser matching logic in `gestures.js` is an independent
+implementation and doesn't import any desktop module.
 
 ### Deploy
 
