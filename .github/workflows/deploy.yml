@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Image
         if: ${{ always() }}
-        run: ssh staging 'cd prod/gesture-meme/ && buildah bud -t gesture-meme:latest .'
+        run: ssh staging 'cd prod/gesture-meme/ && buildah bud -t localhost/gesture-meme:latest .'
 
       - name: Stop the container
         run: ssh staging 'podman stop gesture-meme || true'
@@ -53,4 +53,4 @@ jobs:
 
       - name: Start the server
         if: ${{ always() }}
-        run: ssh staging 'podman run -d --restart unless-stopped --name=gesture-meme -p 8000:8000 --env-file ~/prod/gesture-meme/.env -v ~/prod/gesture-meme/storage:/app/web/storage gesture-meme:latest'
+        run: ssh staging 'podman run -d --restart unless-stopped --name=gesture-meme -p 8000:8000 --env-file ~/prod/gesture-meme/.env -v ~/prod/gesture-meme/storage:/app/web/storage localhost/gesture-meme:latest'
