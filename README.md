@@ -7,6 +7,14 @@ meme pops up next to your video feed in real time. Powered by MediaPipe face
 Inspired by [razancodes/emote-meme](https://github.com/razancodes/emote-meme),
 rebuilt to be modular so you can plug in **your own gestures and memes**.
 
+There are two ways to run it:
+
+- **Desktop app** (`python main.py`) — the original OpenCV split-screen loop
+  configured by editing `config.py` / `gestures.py`.
+- **Website** (`web/`) — upload memes, record gestures in the browser, pair
+  them, and run a camera session. All detection runs client-side in the
+  browser; see [Run the website](#run-the-website).
+
 ```
 .
 ├── main.py          # webcam loop + split screen (run this)
@@ -72,6 +80,53 @@ below/above what you see.
   you sit.
 
 Higher `priority` wins when multiple gestures match the same frame.
+
+## Run the website
+
+The website (`web/`) turns the desktop tool into something anyone can use from
+a browser: **upload memes**, **record a gesture** (or pick an existing one) and
+**pair** them, then **select memes and start a camera session** where doing the
+gestures shows the memes. Gesture recognition runs entirely in the browser via
+MediaPipe's WebAssembly build — the webcam never leaves your machine.
+
+### Prerequisites
+
+- A running **MongoDB** (metadata store). Point at it with `MONGO_URI`
+  (default `mongodb://localhost:27017`); start one locally with e.g.
+  `podman run -d -p 27017:27017 --name mongo mongo:7`.
+
+### Start it
+
+```bash
+pip install -r web/requirements.txt
+cd web
+uvicorn app:app --reload
+```
+
+Open http://localhost:8000. On first run the library is seeded with the sample
+memes from `memes/` and the six built-in gestures (smile, shock, wink, thinking,
+shush, hands_up). Uploaded files land in `web/storage/` (gitignored).
+
+### How the pieces map to the desktop app
+
+| Desktop (Python)                    | Website (browser JS)                    |
+| ----------------------------------- | --------------------------------------- |
+| `detectors.py` MediaPipe setup      | `web/static/js/mediapipe.js`            |
+| `features.py`                       | `web/static/js/features.js`             |
+| `gestures.py` built-ins             | built-in predicates in `gestures.js`    |
+| `custom_gestures.py` template match | template matching in `gestures.js`      |
+| the (missing) `recorder.py`         | `web/static/js/record.js` (in-browser)  |
+| `main.py` loop + `meme_player.py`   | `web/static/js/play.js` + `play.html`   |
+| `config.GESTURE_MEMES` mapping      | per-meme pairing stored in MongoDB      |
+
+### Deploy
+
+`.github/workflows/deploy.yml` builds the `Dockerfile` and (re)starts the
+container over SSH on push to `main`. It expects repo secrets `HOST`,
+`USERNAME`, `SSH_PRIVATE_KEY`, a checkout at `~/prod/gesture-meme/` on the host,
+and a `~/prod/gesture-meme/.env` file supplying `MONGO_URI` (pointing at a
+reachable MongoDB). Uploads persist via the `~/prod/gesture-meme/storage`
+volume.
 
 ## Troubleshooting
 

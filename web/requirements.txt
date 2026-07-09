@@ -1,0 +1,5 @@
+# Web app (browser does all the MediaPipe work, so no opencv/mediapipe here).
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+pymongo>=4.6.0

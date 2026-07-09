@@ -23,6 +23,7 @@ Tips for tuning:
 """
 
 from features import dist
+import custom_gestures
 
 # Registry populated by the @gesture decorator.
 GESTURES = []  # list of (name, priority, fn)

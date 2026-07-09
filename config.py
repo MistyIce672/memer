@@ -17,6 +17,9 @@ ROOT = Path(__file__).parent
 MEMES_DIR = ROOT / "memes"
 MODELS_DIR = ROOT / "models"
 
+# Recorded gestures (created by recorder.py). See README "Record your own".
+CUSTOM_GESTURES_FILE = ROOT / "custom_gestures.json"
+
 # --- Camera / window -----------------------------------------------------
 CAMERA_INDEX = 0          # change if you have multiple webcams
 FRAME_WIDTH = 640         # per-pane width; window is 2x this wide

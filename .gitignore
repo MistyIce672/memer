@@ -3,3 +3,7 @@ __pycache__/
 .venv/
 venv/
 models/
+
+# Web app: uploaded files + local Mongo data live here.
+web/storage/
+.env

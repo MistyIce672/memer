@@ -1,0 +1,47 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  deploy:
+    name: "Deploy to prod"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/id_rsa.key
+          chmod 600 ~/.ssh/id_rsa.key
+          cat >> ~/.ssh/config << EOF
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_rsa.key
+            StrictHostKeyChecking no
+          EOF
+        env:
+          SSH_USER: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.HOST }}
+
+      - name: Check out the source
+        run: ssh staging 'cd prod/gesture-meme/ && git fetch && git reset --hard origin/main'
+
+      - name: Build Image
+        if: ${{ always() }}
+        run: ssh staging 'cd prod/gesture-meme/ && buildah bud -t gesture-meme:latest .'
+
+      - name: Stop the container
+        run: ssh staging 'podman stop gesture-meme || true'
+
+      - name: delete old container
+        run: ssh staging 'podman container rm gesture-meme || true'
+
+      - name: Start the server
+        if: ${{ always() }}
+        run: ssh staging 'podman run -d --restart unless-stopped --name=gesture-meme -p 8000:8000 --env-file ~/prod/gesture-meme/.env -v ~/prod/gesture-meme/storage:/app/web/storage gesture-meme:latest'

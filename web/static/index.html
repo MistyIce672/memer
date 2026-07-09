@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gesture Meme — Library</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1 class="brand">Gesture<span>Meme</span></h1>
+      <div class="row">
+        <span id="session-count" class="hint"></span>
+        <a class="btn btn-primary" id="start-session" href="/play">▶ Start session</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Upload -->
+      <section class="panel">
+        <h2>Upload a meme</h2>
+        <form id="upload-form" class="row" style="align-items: flex-end">
+          <label class="field">
+            Image / GIF / video
+            <input type="file" id="up-file" accept="image/*,video/*" required />
+          </label>
+          <label class="field">
+            Name
+            <input type="text" id="up-name" placeholder="e.g. surprised pikachu" />
+          </label>
+          <label class="field">
+            Pair with gesture (optional)
+            <select id="up-gesture"></select>
+          </label>
+          <button class="btn-primary" type="submit">Upload</button>
+        </form>
+        <p class="hint">Pair a meme with a gesture here, or change it later on the card.</p>
+      </section>
+
+      <!-- Gestures -->
+      <section class="panel">
+        <h2>
+          Gestures
+          <button id="record-btn" class="btn-sm">＋ Record new gesture</button>
+        </h2>
+        <div id="gesture-list" class="gesture-list"></div>
+      </section>
+
+      <!-- Memes -->
+      <section class="panel">
+        <h2>
+          Memes
+          <span class="hint">Tick memes, then “Start session”. Each needs a gesture.</span>
+        </h2>
+        <div id="meme-grid" class="grid"></div>
+        <p id="meme-empty" class="muted" hidden>No memes yet — upload one above.</p>
+      </section>
+    </main>
+
+    <!-- Recorder modal -->
+    <div class="modal-backdrop" id="record-modal">
+      <div class="modal">
+        <h3>Record a gesture</h3>
+        <label class="field">
+          Gesture name
+          <input type="text" id="rec-name" placeholder="e.g. peace_sign" />
+        </label>
+        <video id="rec-video" playsinline muted></video>
+        <div class="progressbar"><div id="rec-progress"></div></div>
+        <div class="status" id="rec-status">Camera off.</div>
+        <div class="row" style="justify-content: flex-end">
+          <button id="rec-cancel">Cancel</button>
+          <button id="rec-capture" class="btn-primary" disabled>Hold pose &amp; capture</button>
+          <button id="rec-save" class="btn-primary" disabled>Save gesture</button>
+        </div>
+        <p class="hint">
+          Hold the pose steady while it captures ~30 frames. Face and/or hands must
+          be visible.
+        </p>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module" src="/static/js/library.js"></script>
+  </body>
+</html>
