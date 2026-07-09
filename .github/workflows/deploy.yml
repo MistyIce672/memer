@@ -1,17 +1,50 @@
-name: CI
+name: Production Deployment
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  # GHCR image paths must be lowercase; github.repository is "MistyIce672/memer"
+  # (mixed case), so we pin the lowercase form here.
+  IMAGE_NAME: mistyice672/memer
+
 jobs:
-  deploy:
-    name: "Deploy to prod"
+  build-and-push:
+    name: Build and Push Container
     runs-on: ubuntu-latest
     environment: production
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    name: Deploy to Production
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Configure SSH
         run: |
@@ -30,27 +63,15 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.HOST }}
 
-      - name: Check out the source
-        run: ssh staging 'cd prod/gesture-meme/ && git fetch && git reset --hard origin/main'
-
-      - name: Write env file from secrets
-        # Piped over stdin so the credentials never appear in a remote command
-        # line (or in `ps` on the server). GitHub masks them in the logs.
-        run: printf 'MONGO_URI=%s\nMONGO_DB=%s\n' "$MONGO_URI" "$MONGO_DB" | ssh staging 'cat > ~/prod/gesture-meme/.env'
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          MONGO_DB: ${{ secrets.MONGO_DB }}
-
-      - name: Build Image
-        if: ${{ always() }}
-        run: ssh staging 'cd prod/gesture-meme/ && buildah bud -t localhost/gesture-meme:latest .'
-
-      - name: Stop the container
-        run: ssh staging 'podman stop gesture-meme || true'
-
-      - name: delete old container
-        run: ssh staging 'podman container rm gesture-meme || true'
-
-      - name: Start the server
-        if: ${{ always() }}
-        run: ssh staging 'podman run -d --restart unless-stopped --name=gesture-meme -p 8000:8000 --env-file ~/prod/gesture-meme/.env -v ~/prod/gesture-meme/storage:/app/web/storage localhost/gesture-meme:latest'
+      - name: Pull and run container
+        run: |
+          ssh staging 'podman login ${{ env.REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}'
+          ssh staging 'podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest'
+          ssh staging 'podman stop gesture-meme || true'
+          ssh staging 'podman rm gesture-meme || true'
+          ssh staging 'podman run -d --restart unless-stopped --name=gesture-meme \
+            -p 8000:8000 \
+            -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+            -e MONGO_DB="${{ secrets.MONGO_DB }}" \
+            -v ~/gesture-meme/storage:/app/web/storage \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest'

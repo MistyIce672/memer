@@ -151,17 +151,25 @@ implementation and doesn't import any desktop module.
 
 ### Deploy
 
-`.github/workflows/deploy.yml` builds the `Dockerfile` and (re)starts the
-container over SSH on push to `main`. It expects repo secrets:
+`.github/workflows/deploy.yml` runs on push to `main` (or manual
+`workflow_dispatch`) and has two jobs:
+
+1. **build-and-push** — builds the `Dockerfile` on GitHub's runner and pushes
+   the image to GHCR (`ghcr.io/mistyice672/memer:latest`).
+2. **deploy** — SSHes into the server, `podman pull`s that image, and restarts
+   the container. No build tools or repo checkout are needed on the server —
+   just `podman` and network access to GHCR.
+
+Configure these on a GitHub **Environment** named `production` (the jobs declare
+`environment: production`, so plain repo secrets won't resolve):
 
 - `HOST`, `USERNAME`, `SSH_PRIVATE_KEY` — how to SSH into the server.
-- `MONGO_URI`, `MONGO_DB` — the deploy writes these into
-  `~/prod/gesture-meme/.env` on the server at deploy time (piped over stdin, so
-  the credentials never hit a command line or the logs).
+- `MONGO_URI`, `MONGO_DB` — passed to the container as `-e` env vars at run time.
 
-It also expects a git checkout of this repo at `~/prod/gesture-meme/` on the
-host with `podman` + `buildah` installed. Uploaded memes persist across
-redeploys via the `~/prod/gesture-meme/storage` volume.
+Uploaded memes persist across redeploys via the `~/gesture-meme/storage` volume
+on the host (podman creates it on first run). Note: GHCR image paths must be
+lowercase, which is why `IMAGE_NAME` is pinned rather than derived from the
+mixed-case repo name.
 
 ## Troubleshooting
 
