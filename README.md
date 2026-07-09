@@ -46,6 +46,32 @@ Press `q` or `Esc` to quit.
 
 That's it — restart the app.
 
+## Record a custom gesture (no eyeballing)
+
+Don't want to guess thresholds? Let the app watch you and write the detector:
+
+```bash
+python main.py --record tongue_out
+```
+
+Then, in the window:
+
+- **SPACE** — capture a sample while striking the pose (tap a few times).
+- **B** — capture a *neutral/relaxed* baseline frame (tap a few times). Optional
+  but recommended: it lets the recorder tell what actually changed vs. resting.
+- **C** — clear and start over.
+- **S** — analyze and save a ready-to-paste detector to `recordings/tongue_out.py`
+  (also printed to the terminal), with thresholds picked from your samples.
+- **Q/Esc** — quit.
+
+Open `recordings/tongue_out.py`, paste the function into `gestures.py`, add the
+mapping line it prints to `config.py`, drop your art in `memes/`, and restart.
+
+It records every blendshape plus hand count, so face gestures and "N hands up"
+work automatically. Gestures that depend on *where* a hand is (fingertip near
+chin, etc.) still need a hand-written distance check — the saved file tells you
+when that applies.
+
 ## Tuning thresholds to your face/camera
 
 ```bash

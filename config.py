@@ -36,7 +36,11 @@ GESTURE_MEMES = {
     "wink":      "wink.jpg",
     "thinking":  "thinking.jpg",
     "shush":     "shush.jpg",
-    "hands_up":  "hands_up.gif",
+    "umm":       "umm.jpeg",
+    "sus":       "sus.jpeg",
+    "sad":       "sad.jpeg",
+    "fire":      "fire.jpeg",
+    "deves":     "deves.jpeg",
 }
 
 # When no gesture is active, show this (or None for a blank pane).
