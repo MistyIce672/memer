@@ -152,11 +152,16 @@ implementation and doesn't import any desktop module.
 ### Deploy
 
 `.github/workflows/deploy.yml` builds the `Dockerfile` and (re)starts the
-container over SSH on push to `main`. It expects repo secrets `HOST`,
-`USERNAME`, `SSH_PRIVATE_KEY`, a checkout at `~/prod/gesture-meme/` on the host,
-and a `~/prod/gesture-meme/.env` file supplying `MONGO_URI` (pointing at a
-reachable MongoDB). Uploads persist via the `~/prod/gesture-meme/storage`
-volume.
+container over SSH on push to `main`. It expects repo secrets:
+
+- `HOST`, `USERNAME`, `SSH_PRIVATE_KEY` — how to SSH into the server.
+- `MONGO_URI`, `MONGO_DB` — the deploy writes these into
+  `~/prod/gesture-meme/.env` on the server at deploy time (piped over stdin, so
+  the credentials never hit a command line or the logs).
+
+It also expects a git checkout of this repo at `~/prod/gesture-meme/` on the
+host with `podman` + `buildah` installed. Uploaded memes persist across
+redeploys via the `~/prod/gesture-meme/storage` volume.
 
 ## Troubleshooting
 

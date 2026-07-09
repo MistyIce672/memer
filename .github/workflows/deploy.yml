@@ -32,6 +32,14 @@ jobs:
       - name: Check out the source
         run: ssh staging 'cd prod/gesture-meme/ && git fetch && git reset --hard origin/main'
 
+      - name: Write env file from secrets
+        # Piped over stdin so the credentials never appear in a remote command
+        # line (or in `ps` on the server). GitHub masks them in the logs.
+        run: printf 'MONGO_URI=%s\nMONGO_DB=%s\n' "$MONGO_URI" "$MONGO_DB" | ssh staging 'cat > ~/prod/gesture-meme/.env'
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_DB: ${{ secrets.MONGO_DB }}
+
       - name: Build Image
         if: ${{ always() }}
         run: ssh staging 'cd prod/gesture-meme/ && buildah bud -t gesture-meme:latest .'
