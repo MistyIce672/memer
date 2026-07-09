@@ -166,10 +166,10 @@ Configure these on a GitHub **Environment** named `production` (the jobs declare
 - `HOST`, `USERNAME`, `SSH_PRIVATE_KEY` — how to SSH into the server.
 - `MONGO_URI`, `MONGO_DB` — passed to the container as `-e` env vars at run time.
 
-Uploaded memes persist across redeploys via the `~/gesture-meme/storage` volume
-on the host (podman creates it on first run). Note: GHCR image paths must be
-lowercase, which is why `IMAGE_NAME` is pinned rather than derived from the
-mixed-case repo name.
+Uploaded memes persist across redeploys via the named podman volume
+`gesture-meme-storage` (podman creates and manages it; no host path needed).
+Note: GHCR image paths must be lowercase, which is why `IMAGE_NAME` is pinned
+rather than derived from the mixed-case repo name.
 
 ## Troubleshooting
 

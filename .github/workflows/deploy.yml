@@ -73,5 +73,5 @@ jobs:
             -p 8000:8000 \
             -e MONGO_URI="${{ secrets.MONGO_URI }}" \
             -e MONGO_DB="${{ secrets.MONGO_DB }}" \
-            -v ~/gesture-meme/storage:/app/web/storage \
+            -v gesture-meme-storage:/app/web/storage \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest'
